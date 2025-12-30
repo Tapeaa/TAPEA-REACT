@@ -331,17 +331,15 @@ const styles = StyleSheet.create({
   },
   categoriesContainer: {
     position: 'absolute',
-    top: 130,
+    top: 105,
     left: 0,
     right: 0,
     zIndex: 10,
-    overflow: 'visible',
   },
   categoriesScroll: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     gap: 12,
-    overflow: 'visible',
   },
   categoryBubble: {
     flexDirection: 'row',
@@ -354,8 +352,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 6,
+    elevation: 3,
   },
   categoryBubbleDefault: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',

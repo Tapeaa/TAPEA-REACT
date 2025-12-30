@@ -65,6 +65,24 @@ export default function ClientLayout() {
         }}
       />
       <Tabs.Screen
+        name="itinerary"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="course-en-cours"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="recherche-chauffeur"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="cartes-bancaires"
         options={{
           href: null,

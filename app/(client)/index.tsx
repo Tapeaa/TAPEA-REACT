@@ -309,8 +309,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   logo: {
-    height: 54,
-    width: 110,
+    height: 58,
+    width: 118,
     marginTop: 0,
   },
   supportButton: {

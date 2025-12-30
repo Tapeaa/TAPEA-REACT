@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Keyboard,
   ActivityIndicator,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,23 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/Text';
 import Constants from 'expo-constants';
 
-const getGoogleMapsApiKey = (): string => {
-  if (Constants.expoConfig?.extra?.googleMapsApiKey) {
-    return Constants.expoConfig.extra.googleMapsApiKey;
-  }
-  if ((Constants.manifest as any)?.extra?.googleMapsApiKey) {
-    return (Constants.manifest as any).extra.googleMapsApiKey;
-  }
-  if ((Constants.manifest2 as any)?.extra?.expoClient?.extra?.googleMapsApiKey) {
-    return (Constants.manifest2 as any).extra.expoClient.extra.googleMapsApiKey;
-  }
-  if (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY) {
-    return process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-  }
-  return '';
-};
-
-const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
+const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || '';
 
 type PlacePrediction = {
   place_id: string;
@@ -62,7 +47,7 @@ export default function ItineraryScreen() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchPlacePredictions = async (input: string) => {
-    if (!input || input.length < 3 || !GOOGLE_MAPS_API_KEY) {
+    if (!input || input.length < 3 || !API_URL) {
       setSuggestions([]);
       return;
     }
@@ -70,18 +55,19 @@ export default function ItineraryScreen() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-          input
-        )}&components=country:pf&key=${GOOGLE_MAPS_API_KEY}&language=fr`
+        `${API_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
       );
+      if (!response.ok) {
+        setSuggestions([]);
+        return;
+      }
       const data = await response.json();
-      if (data.status === 'OK') {
-        setSuggestions(data.predictions || []);
+      if (data.predictions) {
+        setSuggestions(data.predictions);
       } else {
         setSuggestions([]);
       }
     } catch (error) {
-      console.log('Place prediction error:', error);
       setSuggestions([]);
     } finally {
       setIsLoading(false);
@@ -89,20 +75,20 @@ export default function ItineraryScreen() {
   };
 
   const fetchPlaceDetails = async (placeId: string) => {
-    if (!GOOGLE_MAPS_API_KEY) return null;
+    if (!API_URL) return null;
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry&key=${GOOGLE_MAPS_API_KEY}`
+        `${API_URL}/places/details?place_id=${placeId}`
       );
+      if (!response.ok) return null;
       const data = await response.json();
-      if (data.status === 'OK' && data.result?.geometry?.location) {
+      if (data.location) {
         return {
-          lat: data.result.geometry.location.lat,
-          lng: data.result.geometry.location.lng,
+          lat: data.location.lat,
+          lng: data.location.lng,
         };
       }
     } catch (error) {
-      console.log('Place details error:', error);
     }
     return null;
   };
@@ -192,17 +178,6 @@ export default function ItineraryScreen() {
     });
   };
 
-  const getLocationIcon = (type: LocationPoint['type']) => {
-    switch (type) {
-      case 'pickup':
-        return { name: 'radio-button-on' as const, color: '#22C55E' };
-      case 'destination':
-        return { name: 'location' as const, color: '#EF4444' };
-      case 'stop':
-        return { name: 'ellipse' as const, color: '#F5C400' };
-    }
-  };
-
   const getPlaceholder = (type: LocationPoint['type']) => {
     switch (type) {
       case 'pickup':
@@ -211,6 +186,17 @@ export default function ItineraryScreen() {
         return 'Où allez-vous ?';
       case 'stop':
         return 'Ajouter un arrêt';
+    }
+  };
+
+  const getDotColor = (type: LocationPoint['type']) => {
+    switch (type) {
+      case 'pickup':
+        return '#22C55E';
+      case 'destination':
+        return '#EF4444';
+      case 'stop':
+        return '#F5C400';
     }
   };
 
@@ -229,7 +215,11 @@ export default function ItineraryScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.locationsContainer}>
           <View style={styles.timeline}>
             {locations.map((loc, index) => (
@@ -237,7 +227,7 @@ export default function ItineraryScreen() {
                 <View
                   style={[
                     styles.timelineDot,
-                    { backgroundColor: getLocationIcon(loc.type).color },
+                    { backgroundColor: getDotColor(loc.type) },
                   ]}
                 />
                 {index < locations.length - 1 && <View style={styles.timelineLine} />}
@@ -246,31 +236,28 @@ export default function ItineraryScreen() {
           </View>
 
           <View style={styles.inputsContainer}>
-            {locations.map((loc) => {
-              const icon = getLocationIcon(loc.type);
-              return (
-                <View key={loc.id} style={styles.inputRow}>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.addressInput}
-                      placeholder={getPlaceholder(loc.type)}
-                      placeholderTextColor="#9CA3AF"
-                      value={loc.address}
-                      onChangeText={(text) => handleAddressChange(loc.id, text)}
-                      onFocus={() => setActiveInputId(loc.id)}
-                    />
-                    {loc.type === 'stop' && (
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => handleRemoveStop(loc.id)}
-                      >
-                        <Ionicons name="close-circle" size={20} color="#9CA3AF" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
+            {locations.map((loc) => (
+              <View key={loc.id} style={styles.inputRow}>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.addressInput}
+                    placeholder={getPlaceholder(loc.type)}
+                    placeholderTextColor="#9CA3AF"
+                    value={loc.address}
+                    onChangeText={(text) => handleAddressChange(loc.id, text)}
+                    onFocus={() => setActiveInputId(loc.id)}
+                  />
+                  {loc.type === 'stop' && (
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveStop(loc.id)}
+                    >
+                      <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  )}
                 </View>
-              );
-            })}
+              </View>
+            ))}
 
             {canAddMoreStops && (
               <TouchableOpacity style={styles.addStopButton} onPress={handleAddStop}>
@@ -281,46 +268,36 @@ export default function ItineraryScreen() {
           </View>
         </View>
 
-        {activeInputId && suggestions.length > 0 && (
+        {activeInputId && (suggestions.length > 0 || isLoading) && (
           <View style={styles.suggestionsContainer}>
             {isLoading && (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="#F5C400" />
               </View>
             )}
-            <FlatList
-              data={suggestions}
-              keyExtractor={(item) => item.place_id}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.suggestionItem}
-                  onPress={() => handleSelectSuggestion(item)}
-                >
-                  <Ionicons name="location-outline" size={20} color="#6B7280" />
-                  <View style={styles.suggestionText}>
-                    <Text style={styles.suggestionMain}>
-                      {item.structured_formatting.main_text}
-                    </Text>
+            {suggestions.map((item) => (
+              <TouchableOpacity
+                key={item.place_id}
+                style={styles.suggestionItem}
+                onPress={() => handleSelectSuggestion(item)}
+              >
+                <Ionicons name="location-outline" size={20} color="#6B7280" />
+                <View style={styles.suggestionText}>
+                  <Text style={styles.suggestionMain}>
+                    {item.structured_formatting?.main_text || item.description}
+                  </Text>
+                  {item.structured_formatting?.secondary_text && (
                     <Text style={styles.suggestionSecondary}>
                       {item.structured_formatting.secondary_text}
                     </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
 
-        {!GOOGLE_MAPS_API_KEY && (
-          <View style={styles.warningContainer}>
-            <Ionicons name="warning-outline" size={20} color="#F59E0B" />
-            <Text style={styles.warningText}>
-              L'autocomplétion des adresses n'est pas disponible. Veuillez configurer la clé API Google Maps.
-            </Text>
-          </View>
-        )}
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -356,7 +333,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 120,
   },
   locationsContainer: {
     flexDirection: 'row',
@@ -364,7 +344,7 @@ const styles = StyleSheet.create({
   timeline: {
     width: 24,
     alignItems: 'center',
-    paddingTop: 14,
+    paddingTop: 18,
   },
   timelineItem: {
     alignItems: 'center',
@@ -419,10 +399,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   suggestionsContainer: {
-    position: 'absolute',
-    top: 220,
-    left: 20,
-    right: 20,
+    marginTop: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000',
@@ -430,8 +407,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-    maxHeight: 300,
-    zIndex: 100,
+    overflow: 'hidden',
   },
   loadingContainer: {
     padding: 16,
@@ -458,23 +434,14 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 2,
   },
-  warningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    backgroundColor: '#FEF3C7',
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-  },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 32 : 20,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },

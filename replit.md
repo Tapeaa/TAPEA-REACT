@@ -122,13 +122,13 @@ lib/                      # Utilitaires
 3. Installer le build sur votre appareil et scanner le QR code
 
 ## Dernières modifications
-- 30/12/2025: Page itinéraire avec autocomplétion Google Places
+- 30/12/2025: Page itinéraire avec saisie d'adresses
   - Nouvelle page itinerary.tsx accessible depuis "Où allez-vous ?"
-  - Autocomplétion des adresses via Google Places API (limité à la Polynésie française)
+  - Saisie manuelle des adresses de départ et d'arrivée
   - Possibilité d'ajouter jusqu'à 3 arrêts intermédiaires
   - Timeline visuelle avec points colorés (vert = départ, jaune = arrêts, rouge = arrivée)
   - Transmission des données d'itinéraire vers commande-options
-  - Support multi-environnement pour la clé API (dev/prod via Constants et env vars)
+  - Prêt pour autocomplétion via backend proxy (endpoints /places/autocomplete et /places/details)
 - 30/12/2025: Amélioration gestion des erreurs API
   - Nouvelle classe ApiError avec status, isNetworkError, isServerError
   - Vérification Content-Type avant parsing JSON (évite "JSON Parse error")

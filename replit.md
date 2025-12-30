@@ -65,8 +65,10 @@ lib/                      # Utilitaires
 ├── socket.ts             # Configuration Socket.io
 ├── queryClient.ts        # React Query client
 ├── AuthContext.tsx       # Contexte d'authentification
-├── stripe.tsx            # Wrapper Stripe (fallback pour Expo Go)
-└── maps.tsx              # Wrapper Maps (fallback pour Expo Go)
+├── stripe.tsx            # Wrapper Stripe (fallback web)
+├── stripe.native.tsx     # Stripe natif (Development Build)
+├── maps.tsx              # Wrapper Maps (fallback web)
+└── maps.native.tsx       # Maps natif (Development Build)
 ```
 
 ## Configuration
@@ -118,8 +120,13 @@ lib/                      # Utilitaires
 3. Installer le build sur votre appareil et scanner le QR code
 
 ## Dernières modifications
+- 30/12/2025: Configuration Development Build
+  - Installation expo-dev-client
+  - Configuration EAS avec projectId valide (b68a1d5a-a4cb-4b7a-8020-50a55355f5b4)
+  - Création fichiers platform-specific (.native.tsx) pour Maps et Stripe
+  - Metro sélectionne automatiquement le bon fichier selon la plateforme
+  - Web = fallbacks, Mobile natif = vrais modules
 - 30/12/2025: Restauration du mode Expo Go
-  - Suppression d'expo-dev-client pour compatibilité Expo Go
   - Création de wrappers lib/stripe.tsx et lib/maps.tsx
   - Imports conditionnels pour éviter les erreurs de bundling web
   - Configuration eas.json pour builds futurs

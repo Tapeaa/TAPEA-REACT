@@ -26,7 +26,7 @@ export default function ChauffeurProfilScreen() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={40} color="#F5C400" />
           </View>
-          <Text variant="h3">Chauffeur TĀPE'A</Text>
+          <Text variant="h3">{"Chauffeur TĀPE'A"}</Text>
           <Text variant="caption">Actif</Text>
         </Card>
 

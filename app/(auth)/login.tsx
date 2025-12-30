@@ -123,7 +123,7 @@ export default function LoginScreen() {
             </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
               <Text variant="body" style={styles.linkText}>
-                S'inscrire
+                {"S'inscrire"}
               </Text>
             </TouchableOpacity>
           </View>

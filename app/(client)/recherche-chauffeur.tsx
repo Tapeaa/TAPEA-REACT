@@ -76,7 +76,7 @@ export default function RechercheChauffeureScreen() {
             <ActivityIndicator size="large" color="#F5C400" />
           </View>
           <Text variant="h3" style={styles.searchingText}>
-            Recherche d'un chauffeur...
+            {"Recherche d'un chauffeur..."}
           </Text>
           <Text variant="body" style={styles.searchingSubtext}>
             {searchTime} secondes

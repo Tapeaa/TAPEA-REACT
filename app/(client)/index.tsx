@@ -15,21 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/Text';
 import { useAuth } from '@/lib/AuthContext';
+import { MapView, Marker, isMapsAvailable } from '@/lib/maps';
 
 const { width, height } = Dimensions.get('window');
-
-let MapView: any = null;
-let Marker: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Marker = Maps.Marker;
-  } catch (e) {
-    console.log('Maps not available - requires development build');
-  }
-}
 
 const categories = [
   { id: 'tarifs', label: 'Tarifs', icon: require('@/assets/images/icon-tarifs.png'), href: '/(client)/tarifs' },

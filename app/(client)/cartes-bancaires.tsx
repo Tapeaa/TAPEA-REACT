@@ -1,4 +1,4 @@
-import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,21 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { PaymentMethod } from '@/lib/types';
-
-let CardField: any = null;
-let useConfirmSetupIntent: any = null;
-let useStripeHook: any = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    const StripeNative = require('@stripe/stripe-react-native');
-    CardField = StripeNative.CardField;
-    useConfirmSetupIntent = StripeNative.useConfirmSetupIntent;
-    useStripeHook = StripeNative.useStripe;
-  } catch (e) {
-    console.log('Stripe not available - requires development build');
-  }
-}
+import { CardField, useConfirmSetupIntent, useStripe as useStripeHook, isStripeAvailable } from '@/lib/stripe';
 
 export default function CartesBancairesScreen() {
   const router = useRouter();
@@ -34,7 +20,7 @@ export default function CartesBancairesScreen() {
   const [showAddCard, setShowAddCard] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
   
-  const confirmSetupIntent = useConfirmSetupIntent ? useConfirmSetupIntent() : null;
+  const confirmSetupIntentResult = useConfirmSetupIntent ? useConfirmSetupIntent() : null;
   const stripe = useStripeHook ? useStripeHook() : null;
 
   const { data: paymentMethods, refetch } = useQuery({
@@ -45,7 +31,7 @@ export default function CartesBancairesScreen() {
 
   const addCardMutation = useMutation({
     mutationFn: async () => {
-      if (!confirmSetupIntent) {
+      if (!confirmSetupIntentResult) {
         throw new Error('Stripe non disponible. Créez un Development Build pour utiliser les paiements.');
       }
 
@@ -54,7 +40,7 @@ export default function CartesBancairesScreen() {
         { method: 'POST' }
       );
 
-      const { error, setupIntent } = await confirmSetupIntent.confirmSetupIntent(
+      const { error, setupIntent } = await confirmSetupIntentResult.confirmSetupIntent(
         setupIntentResponse.clientSecret,
         { paymentMethodType: 'Card' }
       );
@@ -82,7 +68,7 @@ export default function CartesBancairesScreen() {
   };
 
   const handleAddCard = () => {
-    if (!CardField) {
+    if (!isStripeAvailable) {
       Alert.alert(
         'Fonctionnalité non disponible',
         'Pour ajouter une carte bancaire, vous devez utiliser un Development Build de l\'application. Expo Go ne supporte pas cette fonctionnalité.'
@@ -133,7 +119,7 @@ export default function CartesBancairesScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {showAddCard && CardField ? (
+      {showAddCard && isStripeAvailable && CardField ? (
         <View style={styles.addCardContainer}>
           <Text variant="h3" style={styles.addCardTitle}>Ajouter une carte</Text>
           <CardField
@@ -191,7 +177,7 @@ export default function CartesBancairesScreen() {
               <Text variant="body" style={styles.emptyText}>
                 Ajoutez une carte pour payer vos courses
               </Text>
-              {!CardField && (
+              {!isStripeAvailable && (
                 <Text variant="caption" style={styles.devBuildNote}>
                   Note: Les paiements nécessitent un Development Build
                 </Text>

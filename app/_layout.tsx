@@ -5,24 +5,20 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import Constants from 'expo-constants';
 
 import { AuthProvider } from '@/lib/AuthContext';
 import { queryClient } from '@/lib/queryClient';
+import { StripeProvider, isStripeAvailable } from '@/lib/stripe';
 
 SplashScreen.preventAutoHideAsync();
 
 const stripePublishableKey = Constants.expoConfig?.extra?.stripePublishableKey || '';
 
-let StripeProviderWrapper: React.FC<{ children: React.ReactNode }>;
-
-if (Platform.OS === 'web') {
-  StripeProviderWrapper = ({ children }) => <View style={{ flex: 1 }}>{children}</View>;
-} else {
-  try {
-    const { StripeProvider } = require('@stripe/stripe-react-native');
-    StripeProviderWrapper = ({ children }) => (
+const StripeProviderWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  if (isStripeAvailable && StripeProvider) {
+    return (
       <StripeProvider
         publishableKey={stripePublishableKey}
         merchantIdentifier="merchant.com.tapea"
@@ -30,10 +26,9 @@ if (Platform.OS === 'web') {
         {children}
       </StripeProvider>
     );
-  } catch (e) {
-    StripeProviderWrapper = ({ children }) => <View style={{ flex: 1 }}>{children}</View>;
   }
-}
+  return <View style={{ flex: 1 }}>{children}</View>;
+};
 
 export default function RootLayout() {
   const [loaded] = useFonts({

@@ -1,8 +1,8 @@
-import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text } from '@/components/ui/Text';
 import { Card } from '@/components/ui/Card';
@@ -11,15 +11,68 @@ import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { PaymentMethod } from '@/lib/types';
 
+let CardField: any = null;
+let useConfirmSetupIntent: any = null;
+let useStripeHook: any = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    const StripeNative = require('@stripe/stripe-react-native');
+    CardField = StripeNative.CardField;
+    useConfirmSetupIntent = StripeNative.useConfirmSetupIntent;
+    useStripeHook = StripeNative.useStripe;
+  } catch (e) {
+    console.log('Stripe not available - requires development build');
+  }
+}
+
 export default function CartesBancairesScreen() {
   const router = useRouter();
   const { client } = useAuth();
+  const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
+  
+  const confirmSetupIntent = useConfirmSetupIntent ? useConfirmSetupIntent() : null;
+  const stripe = useStripeHook ? useStripeHook() : null;
 
   const { data: paymentMethods, refetch } = useQuery({
     queryKey: ['payment-methods', client?.id],
     queryFn: () => apiFetch<PaymentMethod[]>(`/api/stripe/payment-methods/${client?.id}`),
     enabled: !!client?.id,
+  });
+
+  const addCardMutation = useMutation({
+    mutationFn: async () => {
+      if (!confirmSetupIntent) {
+        throw new Error('Stripe non disponible. Créez un Development Build pour utiliser les paiements.');
+      }
+
+      const setupIntentResponse = await apiFetch<{ clientSecret: string }>(
+        `/api/stripe/setup-intent/${client?.id}`,
+        { method: 'POST' }
+      );
+
+      const { error, setupIntent } = await confirmSetupIntent.confirmSetupIntent(
+        setupIntentResponse.clientSecret,
+        { paymentMethodType: 'Card' }
+      );
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return setupIntent;
+    },
+    onSuccess: () => {
+      setShowAddCard(false);
+      queryClient.invalidateQueries({ queryKey: ['payment-methods', client?.id] });
+      Alert.alert('Succès', 'Votre carte a été ajoutée avec succès');
+    },
+    onError: (error: Error) => {
+      Alert.alert('Erreur', error.message || 'Impossible d\'ajouter la carte');
+    },
   });
 
   const handleRefresh = async () => {
@@ -29,7 +82,20 @@ export default function CartesBancairesScreen() {
   };
 
   const handleAddCard = () => {
-    alert('Ajout de carte via Stripe à implémenter');
+    if (!CardField) {
+      Alert.alert(
+        'Fonctionnalité non disponible',
+        'Pour ajouter une carte bancaire, vous devez utiliser un Development Build de l\'application. Expo Go ne supporte pas cette fonctionnalité.'
+      );
+      return;
+    }
+    setShowAddCard(true);
+  };
+
+  const handleConfirmCard = () => {
+    if (cardComplete) {
+      addCardMutation.mutate();
+    }
   };
 
   const renderCard = ({ item: card }: { item: PaymentMethod }) => (
@@ -67,36 +133,83 @@ export default function CartesBancairesScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {paymentMethods && paymentMethods.length > 0 ? (
-        <FlatList
-          data={paymentMethods}
-          renderItem={renderCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#F5C400']} />
-          }
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="card-outline" size={64} color="#e5e7eb" />
-          <Text variant="h3" style={styles.emptyTitle}>
-            Aucune carte
-          </Text>
-          <Text variant="body" style={styles.emptyText}>
-            Ajoutez une carte pour payer vos courses
-          </Text>
+      {showAddCard && CardField ? (
+        <View style={styles.addCardContainer}>
+          <Text variant="h3" style={styles.addCardTitle}>Ajouter une carte</Text>
+          <CardField
+            postalCodeEnabled={false}
+            placeholders={{
+              number: '4242 4242 4242 4242',
+            }}
+            cardStyle={{
+              backgroundColor: '#FFFFFF',
+              textColor: '#1a1a1a',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#e5e7eb',
+            }}
+            style={styles.cardField}
+            onCardChange={(cardDetails: any) => {
+              setCardComplete(cardDetails.complete);
+            }}
+          />
+          <View style={styles.addCardButtons}>
+            <Button
+              title="Annuler"
+              variant="secondary"
+              onPress={() => setShowAddCard(false)}
+              style={{ flex: 1 }}
+            />
+            <Button
+              title="Confirmer"
+              onPress={handleConfirmCard}
+              disabled={!cardComplete || addCardMutation.isPending}
+              loading={addCardMutation.isPending}
+              style={{ flex: 1 }}
+            />
+          </View>
         </View>
+      ) : (
+        <>
+          {paymentMethods && paymentMethods.length > 0 ? (
+            <FlatList
+              data={paymentMethods}
+              renderItem={renderCard}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#F5C400']} />
+              }
+            />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="card-outline" size={64} color="#e5e7eb" />
+              <Text variant="h3" style={styles.emptyTitle}>
+                Aucune carte
+              </Text>
+              <Text variant="body" style={styles.emptyText}>
+                Ajoutez une carte pour payer vos courses
+              </Text>
+              {!CardField && (
+                <Text variant="caption" style={styles.devBuildNote}>
+                  Note: Les paiements nécessitent un Development Build
+                </Text>
+              )}
+            </View>
+          )}
+        </>
       )}
 
-      <View style={styles.footer}>
-        <Button
-          title="Ajouter une carte"
-          onPress={handleAddCard}
-          fullWidth
-        />
-      </View>
+      {!showAddCard && (
+        <View style={styles.footer}>
+          <Button
+            title="Ajouter une carte"
+            onPress={handleAddCard}
+            fullWidth
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -173,6 +286,12 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
   },
+  devBuildNote: {
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 16,
+    fontStyle: 'italic',
+  },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -183,5 +302,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#f3f4f6',
+  },
+  addCardContainer: {
+    padding: 20,
+  },
+  addCardTitle: {
+    marginBottom: 20,
+  },
+  cardField: {
+    width: '100%',
+    height: 50,
+    marginVertical: 20,
+  },
+  addCardButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
   },
 });

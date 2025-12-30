@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   Dimensions,
   NativeSyntheticEvent,
-  NativeScrollEvent
+  NativeScrollEvent,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,15 +18,17 @@ import { useAuth } from '@/lib/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-// Conditional import for MapView to prevent crash on missing native module
 let MapView: any = null;
 let Marker: any = null;
-try {
-  const Maps = require('react-native-maps');
-  MapView = Maps.default;
-  Marker = Maps.Marker;
-} catch (e) {
-  console.warn('Maps native module not found');
+
+if (Platform.OS !== 'web') {
+  try {
+    const Maps = require('react-native-maps');
+    MapView = Maps.default;
+    Marker = Maps.Marker;
+  } catch (e) {
+    console.log('Maps not available - requires development build');
+  }
 }
 
 const categories = [
@@ -36,12 +39,41 @@ const categories = [
   { id: 'contact', label: 'Contact', icon: require('@/assets/images/icon-contact.png'), href: '/(client)/support' },
 ];
 
+const TAHITI_REGION = {
+  latitude: -17.5516,
+  longitude: -149.5585,
+  latitudeDelta: 0.0922,
+  longitudeDelta: 0.0421,
+};
+
 export default function ClientHomeScreen() {
   const router = useRouter();
   const { client } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
+  const mapRef = useRef<any>(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      (async () => {
+        try {
+          const Location = require('expo-location');
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const location = await Location.getCurrentPositionAsync({});
+            setUserLocation({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            });
+          }
+        } catch (e) {
+          console.log('Location not available');
+        }
+      })();
+    }
+  }, []);
 
   const handleCategoryPress = (category: typeof categories[0]) => {
     setSelectedCategory(category.id);
@@ -62,33 +94,51 @@ export default function ClientHomeScreen() {
     });
   };
 
+  const renderMap = () => {
+    if (MapView && Platform.OS !== 'web') {
+      return (
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={userLocation ? {
+            ...userLocation,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          } : TAHITI_REGION}
+          showsUserLocation
+          showsMyLocationButton={false}
+        >
+          {userLocation && Marker && (
+            <Marker
+              coordinate={userLocation}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <View style={styles.userMarker}>
+                <View style={styles.userMarkerInner} />
+              </View>
+            </Marker>
+          )}
+        </MapView>
+      );
+    }
+
+    return (
+      <View style={styles.mapPlaceholder}>
+        <Ionicons name="map-outline" size={64} color="#a3ccff" />
+        <Text style={styles.mapPlaceholderText}>
+          {Platform.OS === 'web' 
+            ? 'Carte disponible sur mobile' 
+            : 'Créez un Development Build pour activer la carte'}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Map Background */}
       <View style={styles.mapBackground}>
-        {MapView ? (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: -17.5516,
-              longitude: -149.5585,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          >
-            {Marker && (
-              <Marker
-                coordinate={{ latitude: -17.5516, longitude: -149.5585 }}
-                image={require('@/assets/images/user-marker.png')}
-              />
-            )}
-          </MapView>
-        ) : (
-          <View style={styles.mapPlaceholder}>
-            <Ionicons name="map-outline" size={64} color="#a3ccff" />
-            <Text style={styles.mapPlaceholderText}>Carte non disponible en mode Expo Go standard</Text>
-          </View>
-        )}
+        {renderMap()}
       </View>
 
       {/* Header */}
@@ -220,6 +270,22 @@ const styles = StyleSheet.create({
     color: '#5c5c5c',
     textAlign: 'center',
   },
+  userMarker: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 223, 109, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userMarkerInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#F5C400',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
   header: {
     position: 'absolute',
     top: 0,
@@ -241,6 +307,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 223, 109, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   logo: {
     height: 75,
@@ -253,6 +324,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6b6b',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   categoriesContainer: {
     position: 'absolute',
@@ -273,7 +349,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginRight: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.40)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   categoryBubbleDefault: {
     backgroundColor: 'rgba(0, 0, 0, 0.40)',
@@ -289,7 +369,6 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#ffffff',
   },
   categoryLabelDefault: {
     color: '#ffffff',
@@ -334,6 +413,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
   },
   searchRow: {
     flexDirection: 'row',
@@ -363,5 +447,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });

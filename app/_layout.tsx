@@ -5,25 +5,35 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import Constants from 'expo-constants';
 
 import { AuthProvider } from '@/lib/AuthContext';
 import { queryClient } from '@/lib/queryClient';
 
-// Mocking StripeProvider if native module is missing
-const StripeProviderMock = ({ children }: { children: React.ReactNode }) => <View style={{ flex: 1 }}>{children}</View>;
-
-let StripeProvider: any = StripeProviderMock;
-try {
-  const StripeNative = require('@stripe/stripe-react-native');
-  if (StripeNative.StripeProvider) {
-    StripeProvider = StripeNative.StripeProvider;
-  }
-} catch (e) {
-  console.warn('Stripe native module not found, using mock');
-}
-
 SplashScreen.preventAutoHideAsync();
+
+const stripePublishableKey = Constants.expoConfig?.extra?.stripePublishableKey || '';
+
+let StripeProviderWrapper: React.FC<{ children: React.ReactNode }>;
+
+if (Platform.OS === 'web') {
+  StripeProviderWrapper = ({ children }) => <View style={{ flex: 1 }}>{children}</View>;
+} else {
+  try {
+    const { StripeProvider } = require('@stripe/stripe-react-native');
+    StripeProviderWrapper = ({ children }) => (
+      <StripeProvider
+        publishableKey={stripePublishableKey}
+        merchantIdentifier="merchant.com.tapea"
+      >
+        {children}
+      </StripeProvider>
+    );
+  } catch (e) {
+    StripeProviderWrapper = ({ children }) => <View style={{ flex: 1 }}>{children}</View>;
+  }
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -42,10 +52,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StripeProvider
-        publishableKey="pk_test_mock"
-        merchantIdentifier="merchant.com.tapea"
-      >
+      <StripeProviderWrapper>
         <AuthProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
@@ -55,7 +62,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="dark" />
         </AuthProvider>
-      </StripeProvider>
+      </StripeProviderWrapper>
     </QueryClientProvider>
   );
 }

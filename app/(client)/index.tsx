@@ -14,31 +14,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/Text';
 import { useAuth } from '@/lib/AuthContext';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import Constants from 'expo-constants';
 
 const { width, height } = Dimensions.get('window');
 
-const mapStyle = [
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "poi",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.icon",
-    "stylers": [{ "visibility": "off" }]
-  },
-  {
-    "featureType": "transit",
-    "stylers": [{ "visibility": "off" }]
-  }
-];
+// Conditional import for MapView to prevent crash on missing native module
+let MapView: any = null;
+let Marker: any = null;
+try {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+} catch (e) {
+  console.warn('Maps native module not found');
+}
 
 const categories = [
   { id: 'tarifs', label: 'Tarifs', icon: require('@/assets/images/icon-tarifs.png'), href: '/(client)/tarifs' },
@@ -74,59 +62,54 @@ export default function ClientHomeScreen() {
     });
   };
 
-  const handleMapPickerPress = () => {
-    router.push({
-      pathname: '/(client)/commande-options',
-      params: { type: 'immediate' },
-    });
-  };
-
   return (
     <View style={styles.container}>
       {/* Map Background */}
       <View style={styles.mapBackground}>
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          initialRegion={{
-            latitude: -17.5516,
-            longitude: -149.5585,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          customMapStyle={mapStyle}
-        >
-          <Marker
-            coordinate={{ latitude: -17.5516, longitude: -149.5585 }}
-            image={require('@/assets/images/user-marker.png')}
-          />
-        </MapView>
+        {MapView ? (
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: -17.5516,
+              longitude: -149.5585,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          >
+            {Marker && (
+              <Marker
+                coordinate={{ latitude: -17.5516, longitude: -149.5585 }}
+                image={require('@/assets/images/user-marker.png')}
+              />
+            )}
+          </MapView>
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <Ionicons name="map-outline" size={64} color="#a3ccff" />
+            <Text style={styles.mapPlaceholderText}>Carte non disponible en mode Expo Go standard</Text>
+          </View>
+        )}
       </View>
 
       {/* Header */}
       <SafeAreaView style={styles.header} edges={['top']}>
         <View style={styles.headerContent}>
-          {/* Menu Button */}
           <TouchableOpacity
             style={styles.menuButton}
             onPress={() => router.push('/(client)/profil')}
-            activeOpacity={0.8}
           >
             <Ionicons name="menu" size={20} color="#343434" />
           </TouchableOpacity>
 
-          {/* Logo */}
           <Image
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
 
-          {/* Support Button */}
           <TouchableOpacity
             style={styles.supportButton}
             onPress={() => router.push('/(client)/support')}
-            activeOpacity={0.8}
           >
             <Ionicons name="chatbubble" size={20} color="#ffffff" />
           </TouchableOpacity>
@@ -153,7 +136,6 @@ export default function ClientHomeScreen() {
                   isSelected ? styles.categoryBubbleSelected : styles.categoryBubbleDefault
                 ]}
                 onPress={() => handleCategoryPress(category)}
-                activeOpacity={0.8}
               >
                 <Image
                   source={category.icon}
@@ -173,7 +155,6 @@ export default function ClientHomeScreen() {
           })}
         </ScrollView>
 
-        {/* Scroll Progress Indicator */}
         <View style={styles.scrollIndicatorContainer}>
           <View style={styles.scrollIndicatorTrack} />
           <View 
@@ -189,21 +170,17 @@ export default function ClientHomeScreen() {
       <View style={styles.bottomPanel}>
         <View style={styles.bottomPanelContent}>
           <View style={styles.searchRow}>
-            {/* Search Input */}
             <TouchableOpacity 
               style={styles.searchInputContainer}
               onPress={handleSearchPress}
-              activeOpacity={0.8}
             >
               <Ionicons name="search" size={20} color="#5c5c5c" />
               <Text style={styles.searchPlaceholder}>Où allez-vous ?</Text>
             </TouchableOpacity>
 
-            {/* Map Picker Button */}
             <TouchableOpacity
               style={styles.mapPickerButton}
-              onPress={handleMapPickerPress}
-              activeOpacity={0.8}
+              onPress={handleSearchPress}
             >
               <Ionicons name="map" size={20} color="#5c5c5c" />
             </TouchableOpacity>
@@ -219,8 +196,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  
-  // Map Background
   mapBackground: {
     position: 'absolute',
     top: 0,
@@ -237,14 +212,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f4ff',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
   },
   mapPlaceholderText: {
-    marginTop: 8,
-    fontSize: 16,
+    marginTop: 16,
+    fontSize: 14,
     color: '#5c5c5c',
+    textAlign: 'center',
   },
-
-  // Header
   header: {
     position: 'absolute',
     top: 0,
@@ -266,11 +241,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 223, 109, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
   },
   logo: {
     height: 75,
@@ -283,14 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6b6b',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
   },
-
-  // Categories
   categoriesContainer: {
     position: 'absolute',
     top: 100,
@@ -310,11 +273,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginRight: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.40)',
   },
   categoryBubbleDefault: {
     backgroundColor: 'rgba(0, 0, 0, 0.40)',
@@ -330,6 +289,7 @@ const styles = StyleSheet.create({
   categoryLabel: {
     fontSize: 14,
     fontWeight: '500',
+    color: '#ffffff',
   },
   categoryLabelDefault: {
     color: '#ffffff',
@@ -337,8 +297,6 @@ const styles = StyleSheet.create({
   categoryLabelSelected: {
     color: '#5c5c5c',
   },
-
-  // Scroll Indicator
   scrollIndicatorContainer: {
     position: 'relative',
     height: 4,
@@ -362,8 +320,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 2,
   },
-
-  // Bottom Panel
   bottomPanel: {
     position: 'absolute',
     bottom: 0,
@@ -378,11 +334,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
   },
   searchRow: {
     flexDirection: 'row',
@@ -412,10 +363,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
   },
 });

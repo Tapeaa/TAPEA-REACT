@@ -120,6 +120,11 @@ lib/                      # Utilitaires
 3. Installer le build sur votre appareil et scanner le QR code
 
 ## Dernières modifications
+- 30/12/2025: Amélioration gestion des erreurs API
+  - Nouvelle classe ApiError avec status, isNetworkError, isServerError
+  - Vérification Content-Type avant parsing JSON (évite "JSON Parse error")
+  - Messages d'erreur clairs en français pour les utilisateurs
+  - Mode hors-ligne gracieux si API_URL non configurée
 - 30/12/2025: Correction build EAS
   - Ajout NPM_CONFIG_LEGACY_PEER_DEPS dans eas.json pour résoudre conflits npm
   - Désactivation newArchEnabled (incompatible avec certains modules natifs)

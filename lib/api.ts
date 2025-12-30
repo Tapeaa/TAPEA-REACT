@@ -42,12 +42,34 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+export class ApiError extends Error {
+  status: number;
+  isNetworkError: boolean;
+  isServerError: boolean;
+
+  constructor(message: string, status: number = 0, isNetworkError: boolean = false) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.isNetworkError = isNetworkError;
+    this.isServerError = status >= 500;
+  }
+}
+
 export async function apiFetch<T = unknown>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
   const { skipAuth = false, ...fetchOptions } = options;
   
+  if (!API_URL) {
+    throw new ApiError(
+      'Serveur non configuré. L\'application fonctionne en mode hors-ligne.',
+      0,
+      true
+    );
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -62,15 +84,51 @@ export async function apiFetch<T = unknown>(
 
   const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
 
-  const response = await fetch(url, {
-    ...fetchOptions,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (networkError) {
+    throw new ApiError(
+      'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
+      0,
+      true
+    );
+  }
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+
+  if (!isJson) {
+    if (response.status === 404) {
+      throw new ApiError('Page non trouvée sur le serveur.', 404);
+    }
+    if (response.status === 403) {
+      throw new ApiError('Accès refusé par le serveur.', 403);
+    }
+    if (response.status >= 500) {
+      throw new ApiError('Le serveur rencontre un problème. Réessayez plus tard.', response.status);
+    }
+    throw new ApiError(
+      'Le serveur a renvoyé une réponse invalide. L\'API n\'est peut-être pas disponible.',
+      response.status
+    );
+  }
+
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError('Réponse du serveur invalide.', response.status);
+  }
 
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Une erreur est survenue');
+    throw new ApiError(
+      data.error || data.message || 'Une erreur est survenue',
+      response.status
+    );
   }
 
   return data as T;

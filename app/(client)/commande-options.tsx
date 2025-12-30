@@ -77,7 +77,23 @@ export default function CommandeOptionsScreen() {
       alert('Veuillez renseigner les adresses');
       return;
     }
-    alert('Fonctionnalité de commande à implémenter avec Google Maps');
+    
+    // Navigate to order confirmation/search driver screen
+    router.push({
+      pathname: '/(client)/recherche-chauffeur',
+      params: {
+        type: params.type || 'immediate',
+        pickup,
+        pickupPlaceId: params.pickupPlaceId || '',
+        destination,
+        destinationPlaceId: params.destinationPlaceId || '',
+        passengers: passengers.toString(),
+        supplements: JSON.stringify(supplements),
+        paymentMethod,
+        totalPrice: totalPrice.toString(),
+        driverEarnings: driverEarnings.toString(),
+      },
+    });
   };
 
   return (

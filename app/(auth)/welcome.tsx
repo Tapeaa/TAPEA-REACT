@@ -19,8 +19,6 @@ export default function WelcomeScreen() {
             />
           </View>
 
-          <Text style={styles.title}>TĀPE'A</Text>
-
           <Text style={styles.subtitle}>
             Votre application de transport
           </Text>

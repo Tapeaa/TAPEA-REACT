@@ -87,8 +87,31 @@ lib/                      # Utilitaires
 3. Clé API Google Maps pour la géolocalisation
 4. Notifications push (Firebase ou Expo Push)
 
+## Design System
+### Couleurs principales
+- **Jaune primaire**: `#F5C400` (boutons principaux)
+- **Jaune clair**: `#ffdf6d` (icônes menu, catégories sélectionnées)
+- **Vert foncé**: `#1a472a` (cercle logo)
+- **Rouge support**: `#ff6b6b` (bouton support)
+- **Texte foncé**: `#343434`
+- **Texte gris**: `#5c5c5c`
+- **Fond carte**: `#f6f6f6`
+
+### Composants
+- **Boutons**: `borderRadius: 9999` (rounded-full), hauteur 48px
+- **Cards**: `borderRadius: 10` ou 12, fond #f6f6f6
+- **Logo**: Dans cercle vert foncé (#1a472a)
+- **Catégories**: Bulles horizontales scrollables, fond sombre transparent
+
 ## Dernières modifications
-- 30/12/2025: Conversion complète vers React Native/Expo
+- 30/12/2025: Design fidèle à l'application web originale
+  - Écran Welcome avec cercle vert + logo + titre
+  - Écran Login avec préfixe PF +689
+  - Écran Client avec header, catégories, carte placeholder
+  - Écran Chauffeur avec toggle online/offline
+  - Écran Profil avec menu items jaune/gris
+  - Boutons rounded-full avec couleurs exactes
+- Conversion complète vers React Native/Expo
 - Structure de navigation avec Expo Router
 - Composants UI adaptés pour mobile
 - Intégration Socket.io pour temps réel

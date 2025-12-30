@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text } from 'react-native';
+
+export const isMapsAvailable = false;
 
 export const MapView = ({ style, children }: { style?: any; children?: React.ReactNode }) => (
   <View style={[style, { backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center' }]}>
-    <Text style={{ color: '#6b7280', fontSize: 14 }}>Carte non disponible</Text>
+    <Text style={{ color: '#6b7280', fontSize: 14 }}>Carte disponible sur mobile uniquement</Text>
     {children}
   </View>
 );
 
 export const Marker = () => null;
-export const isMapsAvailable = false;

@@ -340,36 +340,46 @@ const styles = StyleSheet.create({
   categoriesScroll: {
     paddingHorizontal: 16,
     paddingBottom: 10, // Space for shadow
-    gap: 6,
+    gap: 10,
   },
   categoryBubble: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 22,
+    marginRight: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
   },
   categoryBubbleDefault: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   categoryBubbleSelected: {
     backgroundColor: '#F5C400',
+    shadowColor: '#F5C400',
+    shadowOpacity: 0.3,
   },
   categoryIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
+    width: 22,
+    height: 22,
+    marginRight: 10,
   },
   categoryLabel: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
+    letterSpacing: -0.3,
   },
   categoryLabelDefault: {
-    color: '#FFFFFF',
+    color: '#343434',
   },
   categoryLabelSelected: {
-    color: '#343434',
+    color: '#FFFFFF',
   },
   scrollIndicatorContainer: {
     display: 'none',

@@ -340,15 +340,15 @@ const styles = StyleSheet.create({
   categoriesScroll: {
     paddingHorizontal: 16,
     paddingBottom: 10, // Space for shadow
-    gap: 10,
+    gap: 6,
   },
   categoryBubble: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 6,
     borderRadius: 20,
-    marginRight: 8,
+    marginRight: 0,
   },
   categoryBubbleDefault: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -357,12 +357,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5C400',
   },
   categoryIcon: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     marginRight: 8,
   },
   categoryLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   categoryLabelDefault: {

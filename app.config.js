@@ -7,7 +7,7 @@ export default {
     icon: "./assets/images/icon.png",
     scheme: "tapea",
     userInterfaceStyle: "automatic",
-    newArchEnabled: false,
+    newArchEnabled: true,
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.tapea.app",
@@ -56,17 +56,6 @@ export default {
         {
           merchantIdentifier: "merchant.com.tapea",
           enableGooglePay: true,
-        },
-      ],
-      [
-        "react-native-maps",
-        {
-          android: {
-            apiKey: process.env.GOOGLE_MAPS_API_KEY || "",
-          },
-          ios: {
-            googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
-          },
         },
       ],
     ],

@@ -7,7 +7,7 @@ export default {
     icon: "./assets/images/icon.png",
     scheme: "tapea",
     userInterfaceStyle: "automatic",
-    newArchEnabled: false,
+    newArchEnabled: true,
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.tapea.app",

@@ -47,7 +47,7 @@ export default function RechercheChauffeureScreen() {
 
   const handleConfirm = () => {
     router.push({
-      pathname: '/(client)/course-en-cours',
+      pathname: '/(client)/ride/course-en-cours',
       params: {
         pickup: params.pickup,
         destination: params.destination,

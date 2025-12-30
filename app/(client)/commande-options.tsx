@@ -80,7 +80,7 @@ export default function CommandeOptionsScreen() {
     
     // Navigate to order confirmation/search driver screen
     router.push({
-      pathname: '/(client)/recherche-chauffeur',
+      pathname: '/(client)/ride/recherche-chauffeur',
       params: {
         type: params.type || 'immediate',
         pickup,

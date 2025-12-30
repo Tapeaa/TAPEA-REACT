@@ -9,9 +9,11 @@
       "ios": {
         "simulator": true
       },
+      "node": "20.18.0",
       "env": {
         "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}",
-        "STRIPE_PUBLISHABLE_KEY": "${STRIPE_PUBLISHABLE_KEY}"
+        "STRIPE_PUBLISHABLE_KEY": "${STRIPE_PUBLISHABLE_KEY}",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     "preview": {

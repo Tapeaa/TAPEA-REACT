@@ -64,7 +64,9 @@ lib/                      # Utilitaires
 ├── api.ts                # Fonctions API avec SecureStore
 ├── socket.ts             # Configuration Socket.io
 ├── queryClient.ts        # React Query client
-└── AuthContext.tsx       # Contexte d'authentification
+├── AuthContext.tsx       # Contexte d'authentification
+├── stripe.tsx            # Wrapper Stripe (fallback pour Expo Go)
+└── maps.tsx              # Wrapper Maps (fallback pour Expo Go)
 ```
 
 ## Configuration
@@ -103,7 +105,24 @@ lib/                      # Utilitaires
 - **Logo**: Dans cercle vert foncé (#1a472a)
 - **Catégories**: Bulles horizontales scrollables, fond sombre transparent
 
+## Notes importantes
+
+### Mode Expo Go vs Development Build
+- **Expo Go**: Mode actuel, permet de tester l'app sans compiler de build natif
+- Les fonctionnalités natives (Maps, Stripe) nécessitent un **Development Build** via EAS
+- Les wrappers `lib/stripe.tsx` et `lib/maps.tsx` fournissent des fallbacks gracieux pour Expo Go
+
+### Pour activer Maps et Stripe (nécessite Development Build)
+1. Installer expo-dev-client: `npx expo install expo-dev-client`
+2. Créer un build de développement: `eas build --profile development --platform ios/android`
+3. Installer le build sur votre appareil et scanner le QR code
+
 ## Dernières modifications
+- 30/12/2025: Restauration du mode Expo Go
+  - Suppression d'expo-dev-client pour compatibilité Expo Go
+  - Création de wrappers lib/stripe.tsx et lib/maps.tsx
+  - Imports conditionnels pour éviter les erreurs de bundling web
+  - Configuration eas.json pour builds futurs
 - 30/12/2025: Design fidèle à l'application web originale
   - Écran Welcome avec cercle vert + logo + titre
   - Écran Login avec préfixe PF +689

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,10 +65,15 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text variant="h1">Connexion</Text>
-            <Text variant="body" style={styles.subtitle}>
-              Connectez-vous à votre compte TĀPE'A
-            </Text>
+            <View style={styles.logoCircle}>
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+
+            <Text style={styles.title}>Connexion</Text>
           </View>
 
           <View style={styles.form}>
@@ -80,7 +85,7 @@ export default function LoginScreen() {
 
             <Input
               label="Mot de passe"
-              placeholder="Entrez votre mot de passe"
+              placeholder="Votre mot de passe"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -149,14 +154,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   header: {
+    alignItems: 'center',
     marginBottom: 32,
   },
-  subtitle: {
-    color: '#6b7280',
-    marginTop: 8,
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1a472a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
   form: {
     gap: 16,
+    maxWidth: 320,
+    alignSelf: 'center',
+    width: '100%',
   },
   errorText: {
     color: '#ef4444',
@@ -170,7 +194,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   forgotPasswordText: {
-    color: '#F5C400',
+    color: '#6b7280',
   },
   footer: {
     flexDirection: 'row',

@@ -1,10 +1,8 @@
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
-
-const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -12,28 +10,19 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <View style={styles.centerContent}>
+          <View style={styles.logoCircle}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
 
-        <View style={styles.heroContainer}>
-          <Image
-            source={require('@/assets/images/taxi.png')}
-            style={styles.heroImage}
-            resizeMode="contain"
-          />
-        </View>
+          <Text style={styles.title}>TĀPE'A</Text>
 
-        <View style={styles.textContainer}>
-          <Text variant="h1" style={styles.title}>
-            Bienvenue sur TĀPE'A
-          </Text>
-          <Text variant="body" style={styles.subtitle}>
-            Votre service de taxi en Polynésie française. Réservez facilement et voyagez en toute sérénité.
+          <Text style={styles.subtitle}>
+            Votre application de transport
           </Text>
         </View>
 
@@ -48,14 +37,6 @@ export default function WelcomeScreen() {
             variant="outline"
             onPress={() => router.push('/(auth)/register')}
             fullWidth
-            style={styles.registerButton}
-          />
-          <Button
-            title="Accès chauffeur"
-            variant="ghost"
-            onPress={() => router.push('/(chauffeur)/login')}
-            fullWidth
-            style={styles.driverButton}
           />
         </View>
       </View>
@@ -71,46 +52,42 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
-    paddingBottom: 32,
+    justifyContent: 'center',
+    paddingBottom: 48,
   },
-  logoContainer: {
+  centerContent: {
     alignItems: 'center',
-    marginTop: 20,
+    marginBottom: 48,
   },
-  logo: {
-    width: 200,
-    height: 60,
-  },
-  heroContainer: {
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#1a472a',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
+    marginBottom: 24,
   },
-  heroImage: {
-    width: width * 0.8,
-    height: width * 0.6,
-  },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
+  logoImage: {
+    width: 48,
+    height: 48,
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 12,
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#1a1a1a',
+    letterSpacing: -1,
+    marginBottom: 16,
   },
   subtitle: {
-    textAlign: 'center',
+    fontSize: 16,
     color: '#6b7280',
-    paddingHorizontal: 20,
+    textAlign: 'center',
   },
   buttonsContainer: {
-    gap: 12,
-  },
-  registerButton: {
-    marginTop: 0,
-  },
-  driverButton: {
-    marginTop: 8,
+    gap: 16,
+    maxWidth: 320,
+    alignSelf: 'center',
+    width: '100%',
   },
 });

@@ -5,6 +5,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import Constants from 'expo-constants';
 
 import { AuthProvider } from '@/lib/AuthContext';
 import { queryClient } from '@/lib/queryClient';
@@ -28,15 +30,20 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(client)" />
-          <Stack.Screen name="(chauffeur)" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="dark" />
-      </AuthProvider>
+      <StripeProvider
+        publishableKey={Constants.expoConfig?.extra?.stripePublishableKey || ''}
+        merchantIdentifier="merchant.com.tapea"
+      >
+        <AuthProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(client)" />
+            <Stack.Screen name="(chauffeur)" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="dark" />
+        </AuthProvider>
+      </StripeProvider>
     </QueryClientProvider>
   );
 }

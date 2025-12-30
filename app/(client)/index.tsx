@@ -14,8 +14,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/Text';
 import { useAuth } from '@/lib/AuthContext';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import Constants from 'expo-constants';
 
 const { width, height } = Dimensions.get('window');
+
+const mapStyle = [
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "featureType": "poi",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.icon",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "featureType": "transit",
+    "stylers": [{ "visibility": "off" }]
+  }
+];
 
 const categories = [
   { id: 'tarifs', label: 'Tarifs', icon: require('@/assets/images/icon-tarifs.png'), href: '/(client)/tarifs' },
@@ -60,12 +83,24 @@ export default function ClientHomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Map Placeholder Background */}
+      {/* Map Background */}
       <View style={styles.mapBackground}>
-        <View style={styles.mapPlaceholder}>
-          <Ionicons name="map-outline" size={64} color="#a3ccff" />
-          <Text style={styles.mapPlaceholderText}>Carte</Text>
-        </View>
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          initialRegion={{
+            latitude: -17.5516,
+            longitude: -149.5585,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+          customMapStyle={mapStyle}
+        >
+          <Marker
+            coordinate={{ latitude: -17.5516, longitude: -149.5585 }}
+            image={require('@/assets/images/user-marker.png')}
+          />
+        </MapView>
       </View>
 
       {/* Header */}
@@ -193,6 +228,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 0,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   mapPlaceholder: {
     flex: 1,

@@ -33,8 +33,20 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.tapea",
+          "enableGooglePay": true
+        }
       ]
     ],
+    "extra": {
+      "apiUrl": "https://3c64cb8c-dbdc-4866-98c1-6288dcfab16d-00-148aha3abcr97.worf.replit.dev/api",
+      "googleMapsApiKey": "GOOGLE_MAPS_API_KEY",
+      "stripePublishableKey": "STRIPE_PUBLISHABLE_KEY"
+    },
     "experiments": {
       "typedRoutes": true
     }

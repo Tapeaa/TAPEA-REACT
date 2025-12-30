@@ -16,7 +16,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/Text';
 import Constants from 'expo-constants';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || '';
+const getPlacesApiUrl = (): string => {
+  const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS;
+  if (domain) {
+    return `https://${domain}/api`;
+  }
+  return Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || '';
+};
+
+const PLACES_API_URL = getPlacesApiUrl();
 
 type PlacePrediction = {
   place_id: string;
@@ -47,7 +55,7 @@ export default function ItineraryScreen() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchPlacePredictions = async (input: string) => {
-    if (!input || input.length < 3 || !API_URL) {
+    if (!input || input.length < 3) {
       setSuggestions([]);
       return;
     }
@@ -55,7 +63,7 @@ export default function ItineraryScreen() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${API_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
+        `${PLACES_API_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
       );
       if (!response.ok) {
         setSuggestions([]);
@@ -75,10 +83,9 @@ export default function ItineraryScreen() {
   };
 
   const fetchPlaceDetails = async (placeId: string) => {
-    if (!API_URL) return null;
     try {
       const response = await fetch(
-        `${API_URL}/places/details?place_id=${placeId}`
+        `${PLACES_API_URL}/places/details?place_id=${placeId}`
       );
       if (!response.ok) return null;
       const data = await response.json();

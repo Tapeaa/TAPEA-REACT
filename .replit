@@ -26,10 +26,15 @@ runButton = "Project"
 [[workflows.workflow]]
 name = "Dev Server"
 mode = "sequential"
+author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start"
+args = "npx tsx server/index.ts & npx expo start --web --port 8081 --tunnel"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[workflows.workflow]]
 name = "EAS Init"
@@ -70,19 +75,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Expo Dev Server"
-
-[[workflows.workflow]]
-name = "Expo Dev Server"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx expo start --web --port 5000 --tunnel"
-waitForPort = 5000
+args = "Dev Server"
 
 [agent]
 expertMode = true

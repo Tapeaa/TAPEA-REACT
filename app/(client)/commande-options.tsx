@@ -11,11 +11,18 @@ import { RIDE_OPTIONS, SUPPLEMENTS, calculatePrice, type Supplement } from '@/li
 
 export default function CommandeOptionsScreen() {
   const router = useRouter();
-  const { type } = useLocalSearchParams<{ type: string }>();
-  const selectedOption = RIDE_OPTIONS.find((o) => o.id === type) || RIDE_OPTIONS[0];
+  const params = useLocalSearchParams<{
+    type: string;
+    pickup?: string;
+    pickupPlaceId?: string;
+    destination?: string;
+    destinationPlaceId?: string;
+    stops?: string;
+  }>();
+  const selectedOption = RIDE_OPTIONS.find((o) => o.id === params.type) || RIDE_OPTIONS[0];
 
-  const [pickup, setPickup] = useState('');
-  const [destination, setDestination] = useState('');
+  const [pickup, setPickup] = useState(params.pickup || '');
+  const [destination, setDestination] = useState(params.destination || '');
   const [passengers, setPassengers] = useState(1);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');

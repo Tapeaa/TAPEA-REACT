@@ -37,6 +37,7 @@ app/
 │   ├── commandes.tsx     # Historique des courses
 │   ├── wallet.tsx        # Portefeuille
 │   ├── profil.tsx        # Profil utilisateur
+│   ├── itinerary.tsx     # Page itinéraire avec autocomplétion Google Places
 │   ├── commande-options.tsx # Options de réservation
 │   ├── cartes-bancaires.tsx # Gestion des cartes
 │   ├── info-perso.tsx    # Informations personnelles
@@ -74,6 +75,7 @@ lib/                      # Utilitaires
 ## Configuration
 ### Variables d'environnement
 - `EXPO_PUBLIC_API_URL`: URL de l'API backend
+- `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`: Clé API Google Maps pour l'autocomplétion
 
 ### Codes de test
 - **Client**: N'importe quel numéro +689
@@ -120,6 +122,13 @@ lib/                      # Utilitaires
 3. Installer le build sur votre appareil et scanner le QR code
 
 ## Dernières modifications
+- 30/12/2025: Page itinéraire avec autocomplétion Google Places
+  - Nouvelle page itinerary.tsx accessible depuis "Où allez-vous ?"
+  - Autocomplétion des adresses via Google Places API (limité à la Polynésie française)
+  - Possibilité d'ajouter jusqu'à 3 arrêts intermédiaires
+  - Timeline visuelle avec points colorés (vert = départ, jaune = arrêts, rouge = arrivée)
+  - Transmission des données d'itinéraire vers commande-options
+  - Support multi-environnement pour la clé API (dev/prod via Constants et env vars)
 - 30/12/2025: Amélioration gestion des erreurs API
   - Nouvelle classe ApiError avec status, isNetworkError, isServerError
   - Vérification Content-Type avant parsing JSON (évite "JSON Parse error")

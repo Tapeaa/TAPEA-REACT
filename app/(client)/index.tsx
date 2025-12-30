@@ -76,10 +76,7 @@ export default function ClientHomeScreen() {
   };
 
   const handleSearchPress = () => {
-    router.push({
-      pathname: '/(client)/commande-options',
-      params: { type: 'immediate' },
-    });
+    router.push('/(client)/itinerary');
   };
 
   const handleRecenter = () => {

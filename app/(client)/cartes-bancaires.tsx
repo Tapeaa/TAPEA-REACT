@@ -20,8 +20,8 @@ export default function CartesBancairesScreen() {
   const [showAddCard, setShowAddCard] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
   
-  const confirmSetupIntentResult = useConfirmSetupIntent ? useConfirmSetupIntent() : null;
-  const stripe = useStripeHook ? useStripeHook() : null;
+  const confirmSetupIntentResult = useConfirmSetupIntent();
+  useStripeHook();
 
   const { data: paymentMethods, refetch } = useQuery({
     queryKey: ['payment-methods', client?.id],

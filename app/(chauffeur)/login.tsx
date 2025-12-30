@@ -93,7 +93,7 @@ export default function ChauffeurLoginScreen() {
         <View style={styles.header}>
           <Text variant="h1">Accès Chauffeur</Text>
           <Text variant="body" style={styles.subtitle}>
-            Entrez votre code d'accès à 6 chiffres
+            {"Entrez votre code d'accès à 6 chiffres"}
           </Text>
         </View>
 

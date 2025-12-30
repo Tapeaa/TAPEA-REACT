@@ -82,7 +82,7 @@ export default function RegisterScreen() {
           <View style={styles.header}>
             <Text variant="h1">Inscription</Text>
             <Text variant="body" style={styles.subtitle}>
-              Créez votre compte TĀPE'A
+              {"Créez votre compte TĀPE'A"}
             </Text>
           </View>
 
@@ -134,7 +134,7 @@ export default function RegisterScreen() {
             ) : null}
 
             <Button
-              title="S'inscrire"
+              title={"S'inscrire"}
               onPress={handleRegister}
               loading={isLoading}
               disabled={isLoading}

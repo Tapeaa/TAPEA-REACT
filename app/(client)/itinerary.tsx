@@ -312,7 +312,7 @@ export default function ItineraryScreen() {
           onPress={handleConfirm}
           disabled={!isValid}
         >
-          <Text style={styles.confirmButtonText}>Confirmer l'itinéraire</Text>
+          <Text style={styles.confirmButtonText}>{"Confirmer l'itinéraire"}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

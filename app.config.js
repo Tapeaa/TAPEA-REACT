@@ -74,6 +74,9 @@ export default {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: "b68a1d5a-a4cb-4b7a-8020-50a55355f5b4",
+      },
       apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://3c64cb8c-dbdc-4866-98c1-6288dcfab16d-00-148aha3abcr97.worf.replit.dev/api",
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
     },

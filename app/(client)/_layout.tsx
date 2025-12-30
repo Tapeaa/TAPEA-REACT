@@ -65,19 +65,7 @@ export default function ClientLayout() {
         }}
       />
       <Tabs.Screen
-        name="itinerary"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="course-en-cours"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="recherche-chauffeur"
+        name="ride"
         options={{
           href: null,
         }}

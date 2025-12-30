@@ -76,7 +76,7 @@ export default function ClientHomeScreen() {
   };
 
   const handleSearchPress = () => {
-    router.push('/(client)/itinerary');
+    router.push('/(client)/ride/itinerary');
   };
 
   const handleRecenter = () => {

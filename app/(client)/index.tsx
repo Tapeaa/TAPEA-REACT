@@ -82,6 +82,16 @@ export default function ClientHomeScreen() {
     });
   };
 
+  const handleRecenter = () => {
+    if (mapRef.current && userLocation) {
+      mapRef.current.animateToRegion({
+        ...userLocation,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
+    }
+  };
+
   const renderMap = () => {
     if (MapView && Platform.OS !== 'web') {
       return (
@@ -134,9 +144,9 @@ export default function ClientHomeScreen() {
         <View style={styles.headerContent}>
           <TouchableOpacity
             style={styles.menuButton}
-            onPress={() => router.push('/(client)/profil')}
+            onPress={handleRecenter}
           >
-            <Ionicons name="menu" size={20} color="#343434" />
+            <Ionicons name="locate" size={20} color="#343434" />
           </TouchableOpacity>
 
           <Image

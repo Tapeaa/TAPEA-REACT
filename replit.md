@@ -120,6 +120,11 @@ lib/                      # Utilitaires
 3. Installer le build sur votre appareil et scanner le QR code
 
 ## Dernières modifications
+- 30/12/2025: Correction build EAS
+  - Ajout NPM_CONFIG_LEGACY_PEER_DEPS dans eas.json pour résoudre conflits npm
+  - Désactivation newArchEnabled (incompatible avec certains modules natifs)
+  - Suppression plugin react-native-maps (clés API restent dans ios/android config)
+  - Node version fixée à 20.18.0 pour builds EAS
 - 30/12/2025: Configuration Development Build
   - Installation expo-dev-client
   - Configuration EAS avec projectId valide (b68a1d5a-a4cb-4b7a-8020-50a55355f5b4)

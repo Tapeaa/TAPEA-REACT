@@ -26,8 +26,8 @@ export default function ClientLayout() {
         name="index"
         options={{
           title: 'Accueil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home-sharp" : "home-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -35,17 +35,17 @@ export default function ClientLayout() {
         name="commandes"
         options={{
           title: 'Courses',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "time-sharp" : "time-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="wallet"
         options={{
-          title: 'Portefeuille',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet" size={size} color={color} />
+          title: 'Wallet',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "card-sharp" : "card-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -53,8 +53,8 @@ export default function ClientLayout() {
         name="profil"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person-circle-sharp" : "person-circle-outline"} size={26} color={color} />
           ),
         }}
       />

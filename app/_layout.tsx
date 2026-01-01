@@ -11,6 +11,7 @@ import Constants from 'expo-constants';
 import { AuthProvider } from '@/lib/AuthContext';
 import { queryClient } from '@/lib/queryClient';
 import { StripeProvider, isStripeAvailable } from '@/lib/stripe';
+import { NetworkStatus } from '@/components/NetworkStatus';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,6 +50,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <StripeProviderWrapper>
         <AuthProvider>
+          <NetworkStatus />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(client)" />

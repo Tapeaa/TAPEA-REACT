@@ -64,16 +64,32 @@ export default function ChauffeurHomeScreen() {
       }
       setSessionId(sid);
 
-      try {
-        const session = await apiFetch<{ isOnline: boolean }>(`/api/driver-sessions/${sid}`);
-        setIsOnline(session.isOnline);
-      } catch (err) {
-        console.log('Failed to fetch session status');
+      // Si c'est une session test, on ne fait pas d'appel API
+      const isTestSession = sid.startsWith('test-driver-session-');
+      
+      if (!isTestSession) {
+        try {
+          const session = await apiFetch<{ isOnline: boolean }>(`/api/driver-sessions/${sid}`);
+          setIsOnline(session.isOnline);
+        } catch (err) {
+          console.log('Failed to fetch session status');
+        }
+      } else {
+        // Mode test : par défaut hors ligne
+        setIsOnline(false);
       }
 
-      connectSocket();
-      joinDriverSession(sid);
-      setConnectionStatus('connected');
+      // Connecter le socket même en mode test (peut échouer mais ce n'est pas grave)
+      try {
+        connectSocket();
+        if (!isTestSession) {
+          joinDriverSession(sid);
+        }
+        setConnectionStatus('connected');
+      } catch (err) {
+        console.log('Socket connection failed (test mode)');
+        setConnectionStatus('disconnected');
+      }
     };
     init();
 
@@ -135,13 +151,18 @@ export default function ChauffeurHomeScreen() {
   const handleToggleOnline = async (value: boolean) => {
     if (!sessionId) return;
 
+    const isTestSession = sessionId.startsWith('test-driver-session-');
+    
     setIsOnline(value);
-    updateDriverStatus(sessionId, value);
-
-    try {
-      await apiPatch(`/api/driver-sessions/${sessionId}/status`, { isOnline: value });
-    } catch (err) {
-      setIsOnline(!value);
+    
+    // En mode test, on ne fait pas d'appel API
+    if (!isTestSession) {
+      updateDriverStatus(sessionId, value);
+      try {
+        await apiPatch(`/api/driver-sessions/${sessionId}/status`, { isOnline: value });
+      } catch (err) {
+        setIsOnline(!value);
+      }
     }
   };
 

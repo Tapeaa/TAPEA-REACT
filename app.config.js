@@ -12,7 +12,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.tapea.app",
       config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || "",
       },
     },
     android: {
@@ -24,7 +24,7 @@ export default {
       package: "com.tapea.app",
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || "",
         },
       },
     },
@@ -66,9 +66,11 @@ export default {
       eas: {
         projectId: "b68a1d5a-a4cb-4b7a-8020-50a55355f5b4",
       },
-      apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://3c64cb8c-dbdc-4866-98c1-6288dcfab16d-00-148aha3abcr97.worf.replit.dev/api",
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
-      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+      // URL locale pour le développement
+      // Utilisez localhost pour le web, ou votre IP locale (192.168.99.38) pour mobile
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || "http://192.168.99.38:5000/api",
+      stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || "",
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || "",
     },
   },
 };

@@ -92,7 +92,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [client, segments, isLoading]);
 
   const login = async (phone: string, password: string): Promise<AuthResult> => {
-    const cleanPhone = phone.replace('+689', '');
+    // Normaliser le numéro de téléphone pour la vérification du compte de test
+    const cleanPhone = phone.replace(/\+689/g, '').replace(/\s/g, '').trim();
+    
+    // Vérification du compte de test
     if (cleanPhone === '87000000' && password === '12345') {
       const testClient: Client = {
         id: 'test-client-1',
@@ -121,8 +124,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error?: string;
       }>('/api/auth/login', { phone, password }, { skipAuth: true });
 
-      if (data.success && data.client && data.session) {
-        await setClientSessionId(data.session.id);
+      if (data.success && data.client) {
+        // L'API peut retourner session.id ou utiliser des cookies, donc on vérifie les deux
+        if (data.session?.id) {
+          await setClientSessionId(data.session.id);
+        }
         setClient(data.client);
         return { success: true, client: data.client };
       }

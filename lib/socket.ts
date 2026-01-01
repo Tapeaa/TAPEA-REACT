@@ -6,14 +6,75 @@ const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_A
 
 let socket: Socket | null = null;
 
+// Stockage des callbacks pour réinscription après reconnexion
+const reconnectCallbacks: Array<() => void> = [];
+
+// Fonction pour réinscrire tous les listeners après reconnexion
+function rejoinRoomsAfterReconnect() {
+  reconnectCallbacks.forEach(callback => {
+    try {
+      callback();
+    } catch (error) {
+      console.error('[Socket] Error re-executing reconnect callback:', error);
+    }
+  });
+}
+
 export function getSocket(): Socket {
   if (!socket) {
     socket = io(API_URL, {
       autoConnect: false,
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity, // Tentatives infinies
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000, // Max 10 secondes entre tentatives
+      timeout: 20000,
+      forceNew: false, // Réutiliser la connexion si possible
+    });
+
+    // Gestion des événements de reconnexion
+    socket.on('connect', () => {
+      console.log('[Socket] Connected');
+      // Réinscrire tous les listeners après reconnexion
+      rejoinRoomsAfterReconnect();
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[Socket] Disconnected:', reason);
+      if (reason === 'io server disconnect') {
+        // Le serveur a déconnecté, reconnecter manuellement
+        socket?.connect();
+      }
+    });
+
+    socket.on('reconnect', (attemptNumber) => {
+      console.log(`[Socket] Reconnected after ${attemptNumber} attempts`);
+      // Réinscrire tous les listeners après reconnexion
+      rejoinRoomsAfterReconnect();
+    });
+
+    socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`[Socket] Reconnection attempt ${attemptNumber}`);
+    });
+
+    socket.on('reconnect_error', (error) => {
+      console.error('[Socket] Reconnection error:', error.message);
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.error('[Socket] Reconnection failed after all attempts');
+      // Essayer de reconnecter manuellement après un délai
+      setTimeout(() => {
+        if (socket && !socket.connected) {
+          console.log('[Socket] Attempting manual reconnection...');
+          socket.connect();
+        }
+      }, 5000);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('[Socket] Connection error:', error.message);
     });
   }
   return socket;
@@ -92,8 +153,24 @@ export async function joinDriverSessionAsync(sessionId: string): Promise<boolean
 }
 
 export function joinDriverSession(sessionId: string): void {
-  const s = connectSocket();
-  s.emit('driver:join', { sessionId });
+  const s = getSocket();
+  
+  const joinSession = () => {
+    if (s.connected) {
+      s.emit('driver:join', { sessionId });
+      console.log(`[Socket] Driver joined session: ${sessionId}`);
+    }
+  };
+
+  // Enregistrer le callback pour réinscription après reconnexion
+  reconnectCallbacks.push(joinSession);
+
+  if (s.connected) {
+    joinSession();
+  } else {
+    s.once('connect', joinSession);
+    s.connect();
+  }
 }
 
 export function updateDriverStatus(sessionId: string, isOnline: boolean): void {
@@ -154,8 +231,32 @@ export function onOrderAcceptError(callback: (data: { message: string }) => void
 }
 
 export function joinClientSession(orderId: string, clientToken?: string): void {
-  const s = connectSocket();
-  s.emit('client:join', { orderId, clientToken });
+  const s = getSocket();
+  
+  const joinSession = () => {
+    if (s.connected) {
+      s.emit('client:join', { orderId, clientToken });
+      console.log(`[Socket] Client joined session: ${orderId} with token: ${clientToken ? 'yes' : 'no'}`);
+    }
+  };
+
+  // Enregistrer le callback pour réinscription après reconnexion
+  reconnectCallbacks.push(joinSession);
+
+  if (s.connected) {
+    joinSession();
+  } else {
+    s.once('connect', joinSession);
+    s.connect();
+  }
+}
+
+export function onClientJoinError(
+  callback: (data: { message: string }) => void
+): () => void {
+  const s = getSocket();
+  s.on('client:join:error', callback);
+  return () => s.off('client:join:error', callback);
 }
 
 export function onDriverAssigned(
@@ -190,12 +291,20 @@ export function joinRideRoom(
   const s = getSocket();
   const payload = { orderId, role, ...credentials };
 
-  if (s.connected) {
-    s.emit('ride:join', payload);
-  } else {
-    s.once('connect', () => {
+  const joinRoom = () => {
+    if (s.connected) {
       s.emit('ride:join', payload);
-    });
+      console.log(`[Socket] Joined ride room: ${orderId} as ${role}`);
+    }
+  };
+
+  // Enregistrer le callback pour réinscription après reconnexion
+  reconnectCallbacks.push(joinRoom);
+
+  if (s.connected) {
+    joinRoom();
+  } else {
+    s.once('connect', joinRoom);
     s.connect();
   }
 }
@@ -234,6 +343,8 @@ export function onPaymentStatus(
     clientConfirmed?: boolean;
     amount?: number;
     paymentMethod?: string;
+    cardBrand?: string | null;
+    cardLast4?: string | null;
     errorMessage?: string;
   }) => void
 ): () => void {
@@ -253,7 +364,31 @@ export function switchToCashPayment(orderId: string, clientToken: string): void 
   const s = getSocket();
   if (s.connected) {
     s.emit('payment:switch-cash', { orderId, clientToken });
+    console.log(`[Socket] payment:switch-cash emitted for order ${orderId}`);
   }
+}
+
+export function onPaymentRetryReady(
+  callback: (data: {
+    orderId: string;
+    message: string;
+  }) => void
+): () => void {
+  const s = getSocket();
+  s.on('payment:retry:ready', callback);
+  return () => s.off('payment:retry:ready', callback);
+}
+
+export function onPaymentSwitchedToCash(
+  callback: (data: {
+    orderId: string;
+    amount: number;
+    message: string;
+  }) => void
+): () => void {
+  const s = getSocket();
+  s.on('payment:switched-to-cash', callback);
+  return () => s.off('payment:switched-to-cash', callback);
 }
 
 export function cancelRide(

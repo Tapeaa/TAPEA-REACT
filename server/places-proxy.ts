@@ -80,6 +80,78 @@ app.get('/places/details', async (req, res) => {
   }
 });
 
+// Endpoint pour calculer la route et la distance
+app.get('/places/directions', async (req, res) => {
+  const origin = req.query.origin as string; // placeId ou "lat,lng"
+  const destination = req.query.destination as string; // placeId ou "lat,lng"
+  const waypoints = req.query.waypoints as string | undefined; // JSON array de placeIds ou "lat,lng"
+  const travelMode = (req.query.travelMode as string) || 'driving';
+
+  if (!origin || !destination) {
+    return res.status(400).json({ error: 'origin et destination requis' });
+  }
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    console.error('[PLACES] Google Maps API key not configured');
+    return res.status(500).json({ error: 'API Google Maps non configurée' });
+  }
+
+  try {
+    // Construire l'URL pour Directions API
+    let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=${travelMode}&key=${GOOGLE_MAPS_API_KEY}&language=fr&region=pf`;
+    
+    // Ajouter waypoints si présents
+    if (waypoints) {
+      try {
+        const waypointsArray = JSON.parse(waypoints) as string[];
+        if (waypointsArray.length > 0) {
+          const waypointsStr = waypointsArray.map(wp => `place_id:${wp}`).join('|');
+          url += `&waypoints=${encodeURIComponent(waypointsStr)}`;
+        }
+      } catch (e) {
+        console.warn('[PLACES] Invalid waypoints format, ignoring');
+      }
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.routes && data.routes.length > 0) {
+      const route = data.routes[0];
+      let totalDistance = 0; // en mètres
+      let totalDuration = 0; // en secondes
+
+      route.legs.forEach((leg: any) => {
+        totalDistance += leg.distance?.value || 0;
+        totalDuration += leg.duration?.value || 0;
+      });
+
+      const distanceKm = totalDistance / 1000;
+      const durationMin = Math.round(totalDuration / 60);
+      const durationText = durationMin < 60 
+        ? `${durationMin} min` 
+        : `${Math.floor(durationMin / 60)}h${durationMin % 60 > 0 ? ` ${durationMin % 60}min` : ''}`;
+
+      res.json({
+        distance: distanceKm,
+        duration: durationText,
+        distanceMeters: totalDistance,
+        durationSeconds: totalDuration,
+        polyline: route.overview_polyline?.points,
+      });
+    } else {
+      console.error('[PLACES] Directions error:', data.status, data.error_message);
+      res.status(500).json({ 
+        error: data.error_message || 'Impossible de calculer l\'itinéraire',
+        status: data.status 
+      });
+    }
+  } catch (error) {
+    console.error('[PLACES] Directions fetch error:', error);
+    res.status(500).json({ error: 'Erreur de connexion à l\'API Google' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[PLACES PROXY] Server running on port ${PORT}`);
   if (!GOOGLE_MAPS_API_KEY) {

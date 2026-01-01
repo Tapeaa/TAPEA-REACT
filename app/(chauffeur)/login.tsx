@@ -55,18 +55,43 @@ export default function ChauffeurLoginScreen() {
 
     try {
       const data = await apiPost<{
-        driver: { id: string; firstName: string; lastName: string };
-        session: { id: string };
-      }>('/api/driver/login', { code: fullCode }, { skipAuth: true });
+        success?: boolean;
+        driver?: { id: string; firstName: string; lastName: string };
+        session?: { id: string };
+        error?: string;
+      }>('/api/driver/login', { code: fullCode }, { skipAuth: true, retry: false });
 
-      if (data.driver && data.session) {
+      if (data.success && data.driver && data.session) {
         await setDriverSessionId(data.session.id);
         router.replace('/(chauffeur)/');
       } else {
-        setError('Code invalide');
+        setError(data.error || 'Code invalide');
       }
-    } catch (err) {
-      setError((err as Error).message || 'Code invalide');
+    } catch (err: any) {
+      console.error('Driver login error:', err);
+      // Afficher un message d'erreur plus clair
+      if (err instanceof Error) {
+        const errorMessage = err.message || '';
+        
+        if (errorMessage.includes('401') || errorMessage.includes('Code incorrect') || errorMessage.includes('Code invalide')) {
+          setError('Code incorrect. Veuillez vérifier votre code d\'accès.');
+        } else if (errorMessage.includes('403') || errorMessage.includes('désactivé')) {
+          setError('Votre compte chauffeur est désactivé. Contactez le support.');
+        } else if (errorMessage.includes('502') || errorMessage.includes('backend est inaccessible')) {
+          setError('Le serveur backend est inaccessible. Vérifiez que le serveur est démarré et que l\'URL API est correcte.');
+        } else if (errorMessage.includes('503') || errorMessage.includes('indisponible')) {
+          setError('Le serveur est temporairement indisponible. Réessayez dans quelques instants.');
+        } else if (errorMessage.includes('500') || errorMessage.includes('Erreur interne')) {
+          setError('Erreur serveur. Le code peut être invalide ou le serveur rencontre un problème. Réessayez.');
+        } else if (errorMessage.includes('network') || errorMessage.includes('connexion') || errorMessage.includes('contacter le serveur')) {
+          setError('Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
+        } else {
+          // Afficher le message d'erreur réel du serveur
+          setError(errorMessage || 'Erreur lors de la connexion');
+        }
+      } else {
+        setError('Code invalide ou erreur serveur');
+      }
     } finally {
       setIsLoading(false);
     }

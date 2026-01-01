@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/Text';
 import { Input } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { useAuth } from '@/lib/AuthContext';
+import { setDriverSessionId } from '@/lib/api';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,7 +42,8 @@ export default function LoginScreen() {
         setError(result.error || 'Erreur de connexion');
       }
     } catch (err) {
-      setError('Une erreur est survenue');
+      console.error('Login error:', err);
+      setError((err as Error).message || 'Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }
@@ -127,6 +129,28 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.driverAccess}>
+            <TouchableOpacity 
+              onPress={async () => {
+                // Connexion automatique avec un profil test chauffeur
+                try {
+                  // Créer une session test pour le chauffeur
+                  const testSessionId = `test-driver-session-${Date.now()}`;
+                  await setDriverSessionId(testSessionId);
+                  
+                  // Rediriger directement vers l'interface chauffeur
+                  router.replace('/(chauffeur)/');
+                } catch (error) {
+                  console.error('Erreur lors de la connexion chauffeur test:', error);
+                }
+              }}
+            >
+              <Text variant="caption" style={styles.driverAccessText}>
+                Accès chauffeur
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -209,5 +233,16 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#F5C400',
     fontWeight: '600',
+  },
+  driverAccess: {
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  driverAccessText: {
+    color: '#6b7280',
+    fontSize: 12,
   },
 });

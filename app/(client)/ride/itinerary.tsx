@@ -178,9 +178,21 @@ export default function ItineraryScreen() {
         type: 'immediate',
         pickup: pickup.address,
         pickupPlaceId: pickup.placeId || '',
+        pickupLat: pickup.coordinates?.lat?.toString() || '',
+        pickupLng: pickup.coordinates?.lng?.toString() || '',
         destination: destination.address,
         destinationPlaceId: destination.placeId || '',
-        stops: JSON.stringify(stops.map((s) => ({ address: s.address, placeId: s.placeId }))),
+        destinationLat: destination.coordinates?.lat?.toString() || '',
+        destinationLng: destination.coordinates?.lng?.toString() || '',
+        stops: JSON.stringify(
+          stops.map((s) => ({
+            id: s.id,
+            value: s.address,
+            placeId: s.placeId,
+            type: 'stop' as const,
+            ...(s.coordinates ? { lat: s.coordinates.lat, lng: s.coordinates.lng } : {}),
+          }))
+        ),
       },
     });
   };
